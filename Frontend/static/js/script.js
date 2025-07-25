@@ -53,12 +53,16 @@ const elements = {
 let analyticsData = {
     qaTestsGenerated: 0,
     qaTestsReviewed: 0,
-    devCodeGenerated: 0,
-    devUnittestsGenerated: 0,
     devCodeReviewed: 0,
     devUnittestsReviewed: 0,
+    devscriptspassed: 0,
+    devscriptsfailed: 0,
+    qascriptspassed: 0,
+    qascriptsfailed: 0,
     timeline: []
 };
+
+
 
 // Chart instances
 let barChart, pieChart, lineChart;
@@ -689,6 +693,11 @@ function generateCodebaseId(name) {
     return `${cleanName}_${timestamp}`;
 }
 
+var globalLanguage;
+function switchLanguage(language) {
+	globalLanguage = language;
+        console.log("Selected language:", language);
+    }
 // Update codebase selector dropdown
 function updateCodebaseSelector() {
     const selector = document.getElementById('codebaseSelector');
@@ -3412,6 +3421,16 @@ function updateAnalyticsDisplay() {
     document.getElementById('devCodeReviewed').textContent = analyticsData.devCodeReviewed;
     document.getElementById('devUnittestsReviewed').textContent = analyticsData.devUnittestsReviewed;
 
+    //document.getElementById('DevScriptsPassed').textContent = analyticsData.devscriptspassed;
+    //document.getElementById('DevScriptsFailed').textContent = analyticsData.devscriptsfailed;
+    //document.getElementById('QAScriptsPassed').textContent = analyticsData.qascriptspassed;
+    //document.getElementById('QAScriptsFailed').textContent = analyticsData.qascriptsfailed;
+    //const devpass = document.getElementById('DevScriptsPassed').textContent = analyticsData.devscriptspassed;
+	//console.log(devpass)
+	console.log('Printing Analytics Data')	
+	console.log(analyticsData)
+	
+
     // Update summary statistics
     const totalGenerated = analyticsData.qaTestsGenerated + analyticsData.devCodeGenerated + analyticsData.devUnittestsGenerated;
     const totalReviewed = analyticsData.qaTestsReviewed + analyticsData.devCodeReviewed + analyticsData.devUnittestsReviewed;
@@ -3481,13 +3500,19 @@ function resetAnalytics() {
             devUnittestsGenerated: 0,
             devCodeReviewed: 0,
             devUnittestsReviewed: 0,
+            devscriptspassed: 0,
+            devscriptsfailed: 0,
+            qascriptspassed: 0,
+            qascriptsfailed: 0,
             timeline: []
         };
+
+        document.getElementById('DevScriptsPassed').textContent = '0';
 
         saveAnalyticsData();
         updateAnalyticsDisplay();
         updateCharts();
-
+	console.log(analyticsData.qascriptsfailed);
         console.log('🔄 Analytics data reset successfully');
         alert('Analytics data has been reset successfully!');
     }
@@ -5169,6 +5194,11 @@ async function generateApplicationCode() {
         updateProgress(60, 'Generating application code', 3);
 
         // EXISTING: Call backend without selected_story_ids
+	//const selectedLanguage = document.getElementById('languageSelector')?.value || 'python';
+	const languageSelector = document.getElementById('languageSelector');
+	const selectedLanguage = languageSelector ? languageSelector.value : 'python';
+	const language = selectedLanguage;
+	console.log('Language selected:', language);
         const response = await fetch('/generate_app_code', {
             method: 'POST',
             headers: {
@@ -5176,7 +5206,8 @@ async function generateApplicationCode() {
             },
             body: JSON.stringify({
                 // No selected_story_ids needed - backend will use stored prompt
-                generate_from_prompt: true
+                generate_from_prompt: true,
+                language: language
             })
         });
 
@@ -9658,6 +9689,16 @@ async function executeCodeWithSelectedDevice() {
             // ✅ SUCCESS PATH - FIXED RESULT MAPPING
             // Store execution results
             executionResults = result.execution_results;
+        	document.getElementById('DevScriptsPassed').textContent = result.DevScriptsPassed || 0;
+        	document.getElementById('DevScriptsFailed').textContent = result.DevScriptsFailed || 0;
+        	document.getElementById('QAScriptsPassed').textContent = result.QAScriptsPassed || 0;
+        	document.getElementById('QAScriptsFailed').textContent = result.QAScriptsFailed || 0;
+
+
+        	analyticsData.devscriptspassed = result.DevScriptsPassed;
+        	analyticsData.devscriptsfailed = result.DevScriptsFailed;
+        	analyticsData.qascriptspassed = result.QAScriptsPassed;
+        	analyticsData.qascriptsfailed = result.QAScriptsFailed;
 
             // Show device information in toast
             if (result.connected_device) {
@@ -9740,6 +9781,26 @@ ${execResult.stderr}
                     console.warn(`Could not find textarea for test case ID ${execResult.test_case_id}`);
                 }
             });
+
+            analyticsData.devscriptspassed = result.DevScriptsPassed;
+            analyticsData.devscriptsfailed = result.DevScriptsFailed;
+            analyticsData.qascriptspassed = result.QAScriptsPassed;
+            analyticsData.qascriptsfailed = result.QAScriptsFailed;
+
+
+            document.getElementById('DevScriptsPassed').textContent = result.DevScriptsPassed || 0;
+            document.getElementById('DevScriptsFailed').textContent = result.DevScriptsFailed || 0;
+            document.getElementById('QAScriptsPassed').textContent = result.QAScriptsPassed || 0;
+            document.getElementById('QAScriptsFailed').textContent = result.QAScriptsFailed || 0;
+
+
+
+                //document.getElementById('DevScriptsPassed').textContent =  analyticsData.devscriptspassed|| 0;
+                //document.getElementById('DevScriptsFailed').textContent = analyticsData.devscriptsfailed || 0;
+                //document.getElementById('QAScriptsPassed').textContent = analyticsData.devscriptspassed || 0;
+                //document.getElementById('QAScriptsFailed').textContent = analyticsdata.devscriptsfailed || 0;
+          
+
 
             /*
             // NEW: Update headers for NON-EXECUTED test cases
@@ -11231,6 +11292,23 @@ async function executeDeveloperCode(selectedDeviceId) {
 
         const result = await response.json();
         console.log('🚀 [DEVELOPER] Execution result:', result);
+
+        setTimeout(() =>{
+            document.getElementById('DevScriptsPassed').textContent = result.DevScriptsPassed || 0;
+            document.getElementById('DevScriptsFailed').textContent = result.DevScriptsFailed || 0;
+            document.getElementById('QAScriptsPassed').textContent = result.QAScriptsPassed || 0;
+            document.getElementById('QAScriptsFailed').textContent = result.QAScriptsFailed || 0;
+            
+         },1000); 
+
+        analyticsData.devscriptspassed = result.DevScriptsPassed;
+        analyticsData.devscriptsfailed = result.DevScriptsFailed;
+        analyticsData.qascriptspassed = result.QAScriptsPassed;
+        analyticsData.qascriptsfailed = result.QAScriptsFailed;
+
+
+
+
 
         if (result.success) {
             // Display execution results in the code tab

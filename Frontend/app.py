@@ -3377,7 +3377,9 @@ def generate_code():
                     args=('generate', 65, 80, 8)  # Go from 65% to 80% over 8 seconds
                 )
                 progress_thread.start()
-
+                languages = ['Python', 'JavaScript', 'Java', 'C++', 'Go']
+                selected_language = request.form.get('language')
+                print(f"*************************DEBUG-1********************************************** {selected_language}") 
                 # Run the actual subprocess
                 output = subprocess.run(["python3", os.path.join(os.getcwd(), "..", "Backend", "Auto_test_gen.py")],
                                         capture_output=True, text=True)
@@ -4318,6 +4320,15 @@ def execute_code():
         total_scripts = len(scripts_to_execute)
         print(f"[INFO] Executing {total_scripts} selected scripts on {connected_device['name']}")
 
+
+        initial_dev_passed = int(str(data.get('DevScriptsPassed') or '0'), 10)
+        initial_dev_failed = int(str(data.get('DevScriptsFailed') or '0'), 10)
+        initial_qa_passed = int(str(data.get('QAScriptsPassed') or '0'), 10)
+        initial_qa_failed = int(str(data.get('QAScriptsPassed') or '0'), 10)
+        print(f"[DEBUG] Initial DevScriptsPassed: {initial_dev_passed}")
+ 
+
+
         for i, script_info in enumerate(scripts_to_execute):
             if os.path.isfile(script_info['file_path']):
                 print(f"[INFO] Executing script {i + 1}/{total_scripts}: {script_info['script_name']}")
@@ -4363,6 +4374,7 @@ def execute_code():
         print(f"[DEBUG] Overall success: {overall_success}")
         print(f"[DEBUG] Final Result: {execution_results}")
 
+
         return jsonify({
             'success': overall_success,
             'connected_device': {
@@ -4375,9 +4387,14 @@ def execute_code():
             'execution_results': execution_results,
             'total_executed': len(execution_results),
             'total_available': len(generated_scripts_info),
+            'DevScriptsPassed': initial_dev_passed+dev_pass_int,
+            'DevScriptsFailed': initial_dev_failed+dev_fail_int,
+            'QAScriptsPassed': initial_qa_passed+qa_pass_int,
+            'QAScriptsFailed': initial_qa_failed+qa_fail_int,
             'selected_test_ids': selected_test_ids or [script['id'] for script in generated_scripts_info],
             'message': success_message
         })
+
 
     except Exception as e:
         update_progress('execute', 0, 'Error', f'Execution failed: {str(e)}', True)
@@ -4566,8 +4583,19 @@ def log_execution_selection(selected_test_ids, available_scripts):
         print("[SELECTION] No specific selection - executing all scripts")
 
 
+dev_pass_int=dev_fail_int=qa_pass_int=qa_fail_int = 0
+
+
 def execute_single_script(ssh, script_info):
     """Execute a single script on the remote RPI"""
+
+    global dev_pass_int
+    global dev_fail_int
+    global qa_pass_int
+    global qa_fail_int
+
+
+
     try:
         with open(script_info['file_path'], 'r') as f:
             script_content = f.read()
@@ -4584,6 +4612,9 @@ def execute_single_script(ssh, script_info):
         print(f"[INFO] Executing {script_info['script_name']}")
         stdin, stdout, stderr = ssh.exec_command(f"python3 -u {remote_path}")
 
+
+
+
         # CRITICAL FIX: Wait for completion BEFORE reading outputs
         exit_status = stdout.channel.recv_exit_status()
         print(f"[DEBUG] Command completed with exit status: {exit_status}")
@@ -4591,6 +4622,31 @@ def execute_single_script(ssh, script_info):
         # NOW read the outputs after command completion
         execution_output = stdout.read().decode()
         error_output = stderr.read().decode()
+
+        failure_message = "FAIL"
+
+        success = len(error_output.strip()) == 0 and failure_message not in execution_output.strip()
+
+
+        print(f"[DEBUG] {success}")
+        script_path = script_info['file_path']
+        print(f" [DEBUG] {script_path}")
+        if "dev-scripts" in script_path:
+            if success:
+                dev_pass_int += 1
+            else:
+                dev_fail_int += 1
+        elif "generated-scripts" in script_path:
+            if success:
+                qa_pass_int += 1
+            else:
+                qa_fail_int += 1
+        else:
+            print(f"[WARNING] Script path '{script_path}' does not match 'dev-scripts' or 'generated-scripts'. Skipping analytics count.")
+
+
+        print(f"DEV PASS INT: {dev_pass_int}")
+        print(f"DEV FAIL INT: {dev_fail_int}")
 
         # Debug logging
         print(f"[DEBUG] STDOUT length: {len(execution_output)}")
@@ -4604,7 +4660,6 @@ def execute_single_script(ssh, script_info):
         print(f"[DEBUG] error_output.strip() repr: {repr(error_output.strip())}")
         print(f"[DEBUG] Success calculation: len(error_output.strip()) == 0 = {len(error_output.strip()) == 0}")
         print(f"[DEBUG] Actual success value: {len(error_output.strip()) == 0}")
-
         return {
             'test_case_id': script_info['id'],
             'script_name': script_info['script_name'],
@@ -5744,10 +5799,17 @@ def store_generated_code():
             'error': str(e)
         })
 
+language = None
 @app.route('/generate_app_code', methods=['POST'])
 def generate_application_code_enhanced():
     """Enhanced application code generation - PRESERVES FALLBACK TO EXISTING MOCK CODE"""
     global generatedApplicationCode
+    global language
+    
+    data = request.get_json()
+    language = data.get('language')
+
+    print(f"********************DEBUG-2********************************** Language received: {language}")
 
     try:
         print("[GENERATE_APP] Starting enhanced code generation")
@@ -5794,6 +5856,7 @@ def generate_application_code_enhanced():
             'success': True,
             'generated_code': generated_code,
             'workflow_type': workflow_type,
+            'language': language,
             'prompt_used': len(stored_prompt),
             'extracted_requirements': extracted_requirements,
             'ai_backend': ai_backend_used,
@@ -5892,9 +5955,11 @@ Utility Functions Available:
 
 def enhance_prompt_with_context(prompt, codebase_context, generation_options):
     """Enhance the prompt with codebase context - FIXED FOR UNIT TEST GENERATION"""
+    global language
+    print(f"********************DEBUG-3********************************** Language received: {language}")
 
     # CRITICAL FIX: Start with clear AI instructions BEFORE adding context
-    enhanced_prompt = f"""You are an expert Python developer. Your task is to generate production-ready code.
+    enhanced_prompt = f"""You are an expert {language} developer. Your Task is to generate production-ready code.
 
 === PRIMARY REQUIREMENTS ===
 {prompt}

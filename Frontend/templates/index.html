@@ -798,8 +798,29 @@
                     <div class="codebase-sidebar" id="codebaseSidebar">
                         <h3>🧠 AI Context</h3>
 
+			<!----Programming language selector----!>
+			<div class="language-selector" style="margin-bottom: 20px;">
+			   <label for="languageSelector" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 0.9rem;">
+			      🎯 Programming Language
+			   </label>
+			   <select class="language-dropdown" id="languageSelector" onchange="switchLanguage(this.value)"
+			          style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; background: white; cursor: pointer;">
+			      <option value="">Select Language...</option>
+			      <option value="python">Python</option>
+			      <option value="javascript">JavaScript</option>
+			      <option value="java">Java</option>
+			      <option value="c">C</option>
+			      <option value="cpp">C++</option>
+			      <option value="php">PHP</option>
+			   </select>
+                         </div>
+
+
                         <!-- Codebase Selector -->
                         <div class="codebase-selector">
+		          <label for="codebaseSelector" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 0.9rem;"> 
+				  📚 Select Codebase
+		          </label>
                             <select class="codebase-dropdown" id="codebaseSelector" onchange="switchCodebase(this.value)">
                                 <option value="">Select Codebase...</option>
                             </select>
@@ -1156,6 +1177,11 @@
                         </div>
                     </div>
 
+		
+
+
+
+
                     <!-- Bar Chart -->
                     <div class="analytics-bar-chart">
                         <div class="chart-title">Code Generation Overview</div>
@@ -1185,6 +1211,26 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Analytics Execution Counters Section -->
+                <div class="execution-counters">
+                    <h3>Execution Counter</h3>
+                    <div class="execution-group">
+                        <div class="stat-label">Dev Scripts Passed</div>
+                        <div class="stat-value" id="DevScriptsPassed">0</div>
+
+                        <div class="stat-label">Dev Scripts Failed</div>
+                        <div class="stat-value" id="DevScriptsFailed">0</div>
+                  
+                        <div class="stat-label">QA Scripts Passed</div>
+                        <div class="stat-value" id="QAScriptsPassed">0</div>
+                  
+                        <div class="stat-label">QA Scripts Failed</div>
+                        <div class="stat-value" id="QAScriptsFailed">0</div>
+                    </div>
+                  </div>
+
+
 
                 <!-- BOTTOM ROW: Pie Chart and Line Chart -->
                 <div class="analytics-bottom-grid">

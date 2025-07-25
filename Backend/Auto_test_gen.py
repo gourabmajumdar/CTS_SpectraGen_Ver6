@@ -235,17 +235,49 @@ class EnhancedCodeGenerator:
             }]
     '''
 
+    def infer_language_from_prompt(self, prompt: str) -> str: #Divya_NEW
+        prompt_lower = prompt.lower()
+        print(f"******************************* {prompt_lower}")
+        if 'java' in prompt_lower:
+            return 'java'
+        elif 'c++' in prompt_lower or 'cpp' in prompt_lower:
+            return 'cpp'
+        elif 'c program' in prompt_lower or 'c' in prompt_lower:
+            return 'c'
+        else:
+            return 'python'
+
     def generate_application_code(self, prompt_data, codebase_context=None, generation_options=None):
         """Generate application code with smart reuse capability - PRESERVES EXISTING INTERFACE"""
         try:
-            logger.info(f"[DEVELOPER] Generating application code")
+            logger.info(f"[DeVELOPER] Generating application code {generation_options}")
 
             # Extract prompt from prompt_data (adapt to your current data structure)
             if isinstance(prompt_data, dict):
                 prompt = prompt_data.get('prompt', '') or prompt_data.get('description', '') or str(prompt_data)
+
+            if isinstance(prompt_data, dict):
+                prompt = prompt_data.get('prompt', '') or prompt_data.get('description', '') or str(prompt_data)
+                language = prompt_data.get('language')
             else:
                 prompt = str(prompt_data)
+                language = None
+            if not language:
+                language = self.infer_language_from_prompt(prompt)
+            print(f"******************************* {language}")
+            '''    
+            else:
+                prompt = str(prompt_data)
+                if isinstance(prompt_data, dict): #Divya_New
+                    language = prompt_data.get('language')
+                    prompt = prompt_data.get('prompt', '') or prompt_data.get('description', '') or str(prompt_data)
+                else:
+                    language = None
+                    prompt = str(prompt_data)
 
+                if not language:
+                    language = self.infer_language_from_prompt(prompt)
+            '''
             logger.info(f"[DEVELOPER] Extracted prompt: {prompt[:100]}...")
 
             # TRY SMART REUSE FIRST (if available)
@@ -298,7 +330,8 @@ class EnhancedCodeGenerator:
                 workflow_type = 'jira'  # default
 
             # Build enhanced prompt with your existing logic
-            enhanced_prompt = self.build_enhanced_prompt(prompt_data, codebase_context, generation_options)
+            #enhanced_prompt = self.build_enhanced_prompt(prompt_data, codebase_context, generation_options) - DIVYA
+            enhanced_prompt = self.build_enhanced_prompt(prompt_data, codebase_context, generation_options, language) #Divya_NEW
 
             # Generate code using your existing backend selection
             if self.ai_backend == 'ollama':
@@ -309,7 +342,8 @@ class EnhancedCodeGenerator:
                 generated_code = self.generate_fallback_application_code(prompt_data)
 
             # Clean and format the generated code with your existing logic
-            clean_code = self.extract_and_clean_code(generated_code, mode='developer')
+            #clean_code = self.extract_and_clean_code(generated_code, mode='developer') - DIVYA
+            clean_code = self.extract_and_clean_code(generated_code, mode='developer', language=language) #Divya_NEW
 
             # Determine if tests should be included
             #include_tests = True
@@ -391,7 +425,8 @@ class EnhancedCodeGenerator:
             }
 
     # 3. ADD this helper method (only if you don't have something similar)
-    def build_enhanced_prompt(self, prompt_data, codebase_context=None, generation_options=None):
+    def build_enhanced_prompt(self, prompt_data, codebase_context=None, generation_options=None, language='python'): #Divya_NEW
+    #def build_enhanced_prompt(self, prompt_data, codebase_context=None, generation_options=None): - DIVYA
         """Build enhanced prompt - adapt this to your existing prompt building logic"""
 
         # If you already have prompt building logic, use that instead
@@ -402,13 +437,16 @@ class EnhancedCodeGenerator:
         else:
             base_prompt = str(prompt_data)
 
-        enhanced_prompt = f"""You are an expert Python developer. Generate production-ready code.
+        #enhanced_prompt = f"""You are an expert Python developer. Generate production-ready code. - DIVYA
+        #Divya_NEW
+        enhanced_prompt = f"""You are an expert {language} developer. GEnerate production-ready code in {language}. 
+
 
     Requirements:
     {base_prompt}
 
     Instructions:
-    - Write clean, maintainable Python code
+    - Write clean, maintainable {language} code
     - Include proper error handling
     - Add comprehensive docstrings
     - Follow Python best practices
@@ -783,7 +821,8 @@ Write a Python script that:
 
         return main_code, unit_tests
 
-    def extract_and_clean_code(self, generated_text, mode='qa'):
+    def extract_and_clean_code(self, generated_text, mode='qa', language='python'): #Divya_NEW
+    #def extract_and_clean_code(self, generated_text, mode='qa'): - DIVYA
         """Extract and clean generated code"""
         try:
             # Extract code from markdown code blocks
@@ -805,42 +844,58 @@ Write a Python script that:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             if mode == 'developer':
-                header = f"""#!/usr/bin/env python3
-'''
-Generated Application Code
-Generated on: {timestamp}
-Mode: Developer Workflow
-AI Backend: {self.ai_backend}
-'''
+                lang = language.lower()
+                if lang == 'python':
+                    header = f"""#!/usr/bin/env python3
+            '''
+            Generated Application Code
+            Generated on: {timestamp}
+            Mode: Developer Workflow
+            AI Backend: {self.ai_backend}
+            '''
 
-import logging
-import sys
-from typing import Any, Dict, List, Optional
+            import logging
+            import sys
+            from typing import Any, Dict, List, Optional
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+            # Configure logging
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            logger = logging.getLogger(__name__)
 
-"""
-            else:
-                header = f"""#!/usr/bin/env python3
-'''
-Generated Test Script
-Generated on: {timestamp}
-Mode: QA Testing Workflow
-AI Backend: {self.ai_backend}
-'''
+            """
+                elif lang == 'java':
+                    header = f"""// Generated Java Application Code
+            // Generated on: {timestamp}
+            // Mode: Developer Workflow
+            // AI Backend: {self.ai_backend}
 
-import subprocess
-import re
-import logging
-import sys
+            """
+                elif lang in ['cpp', 'c++']:
+                    header = f"""// Generated C++ Application Code
+            // Generated on: {timestamp}
+            // Mode: Developer Workflow
+            // AI Backend: {self.ai_backend}
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+            //#include <iostream>
+            //using namespace std;
 
-"""
+            """
+                elif lang == 'c':
+                    header = f"""// Generated C Application Code
+            // Generated on: {timestamp}
+            // Mode: Developer Workflow
+            // AI Backend: {self.ai_backend}
+
+            //#include <stdio.h>
+
+            """
+                else:
+                    header = f"""// Generated Application Code
+            // Generated on: {timestamp}
+            // Mode: Developer Workflow
+            // AI Backend: {self.ai_backend}
+
+            """
 
             return header + clean_code
 
