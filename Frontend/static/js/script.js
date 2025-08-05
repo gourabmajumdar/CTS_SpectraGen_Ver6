@@ -4140,10 +4140,11 @@ function downloadPromptData() {
 function buildAIPrompt(data) {
     const { workflowType, uploadedContent, requirementText, technicalNotes, generationOptions } = data;
 
-    let prompt = `You are an expert software developer tasked with generating production-ready code.\n\n`;
+    //let prompt = `You are an expert software developer tasked with generating production-ready code.\n\n`;
+    let prompt = ``;
 
     // Add workflow context
-    switch(workflowType) {
+   /* switch(workflowType) {
         case 'User Prompt':
             prompt += `TASK TYPE: User Prompt Implementation\n`;
             prompt += `Generate code that fully implements the user prompt with all acceptance criteria.\n\n`;
@@ -4182,7 +4183,7 @@ function buildAIPrompt(data) {
     if (requirementText) {
         prompt += `=== USER REQUIREMENTS ===\n`;
         prompt += `${requirementText}\n\n`;
-    }
+    }  */
 
     // Add technical notes
     if (technicalNotes) {
@@ -4216,7 +4217,7 @@ function buildAIPrompt(data) {
         prompt += `8. Implement exactly what the user story requests\n`;
     }
 
-    prompt += `\nGenerate the complete implementation now:\n`;
+    //prompt += `\nGenerate the complete implementation now:\n`;
 
     return prompt;
 }
@@ -11402,7 +11403,7 @@ function closeDeviceSelectionModal() {
 function displayCreatedPromptInTab(aiPrompt, result) {
     console.log('📝 Displaying created prompt in tab editor');
 
-    const displayMessage = `=== DEVELOPER REQUIREMENTS PROCESSED ===
+/*    const displayMessage = `=== VDEVELOPER REQUIREMENTS PROCESSED ===
 Generated on: ${new Date().toLocaleString()}
 Workflow Type: ${window.selectedWorkflowType || 'User Prompt'}
 
@@ -11418,6 +11419,11 @@ ${aiPrompt}
 1. Review the generated prompt above
 2. Click "Generate Application Code" button
 3. AI will use this prompt to generate your code
+`; */
+
+    const displayMessage = `
+${aiPrompt}
+
 `;
 
     displayPromptInTab(displayMessage);
@@ -12232,7 +12238,7 @@ function runTests() {
 
 // Replace your current runTests() function in script.js with this implementation
 
-async function runTests(fileId = null) {
+/*async function runTests(fileId = null) {
     console.log('🧪 Starting unit test execution...');
 
     // Get the unit test content
@@ -12472,7 +12478,167 @@ ${testContent}`;
     } finally {
         hideDeveloperProgress();
     }
+} */
+
+async function runTests() {
+    console.log('🧪 Starting unit test execution...');
+
+    const testTextarea = document.getElementById('unittestTabTextarea');
+    if (!testTextarea || !testTextarea.value.trim()) {
+        showToast('No unit test content to execute!', 'warning');
+        return;
+    }
+
+    const testContent = testTextarea.value.trim();
+    let testFileName = 'unittest_execution';
+    const selectedLanguage = document.getElementById('languageSelector')?.value.toLowerCase() || 'python';
+
+    let hasValidTestCode = false;
+    switch (selectedLanguage) {
+        case 'python':
+            hasValidTestCode = /def\s+test_\w+\s*\(/.test(testContent) ||
+                               /import\s+(unittest|pytest)/.test(testContent);
+            testFileName += '.py';
+            break;
+        case 'java':
+            hasValidTestCode = /@Test/.test(testContent) ||
+                               /import\s+org\.junit/.test(testContent);
+            testFileName += '.java';
+            break;
+        case 'c':
+            hasValidTestCode = /#include\s+<assert\.h>/.test(testContent) ||
+                               /void\s+test_\w+\s*\(/.test(testContent);
+            testFileName += '.c';
+            break;
+        case 'c++':
+        case 'cpp':
+            hasValidTestCode = /#include\s+<gtest\/gtest\.h>/.test(testContent) ||
+                               /TEST\s*\(\s*\w+,\s*\w+\s*\)/.test(testContent);
+            testFileName += '.cpp';
+            break;
+        default:
+            showToast('Unsupported language selected!', 'error');
+            return;
+    }
+    console.log('FileName :', testFileName);
+    if (!hasValidTestCode) {
+        console.warn('⚠️ Test content found but not recognized as valid unit test code:', testContent);
+        showToast('No valid unit test code found in the textarea!', 'warning');
+        return;
+    }
+
+    const progressContainer = document.getElementById('developerProgressContainer');
+    if (!progressContainer) {
+        console.error('❌ Developer progress container not found!');
+        return;
+    }
+
+    progressContainer.style.display = 'block';
+    progressContainer.classList.add('show');
+
+    const progressTitle = document.getElementById('developerProgressTitle');
+    const progressStatus = document.getElementById('developerProgressStatus');
+    const progressBar = document.getElementById('developerProgressBar');
+    const progressPercentage = document.getElementById('developerProgressPercentage');
+    const progressSteps = document.getElementById('developerProgressSteps');
+
+    if (progressTitle) progressTitle.textContent = 'Running Unit Tests';
+    if (progressStatus) progressStatus.textContent = 'Initializing...';
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressPercentage) progressPercentage.textContent = '0%';
+
+    const steps = [
+        'Preparing test environment',
+        'Saving test file to server',
+        'Installing dependencies',
+        'Executing unit tests',
+        'Collecting test results'
+    ];
+
+    if (progressSteps) {
+        progressSteps.innerHTML = '';
+        steps.forEach((step, index) => {
+            const stepElement = document.createElement('div');
+            stepElement.className = 'progress-step';
+            stepElement.innerHTML = `<div class="step-icon pending" id="dev-step-${index}">●</div><span>${step}</span>`;
+            progressSteps.appendChild(stepElement);
+        });
+    }
+
+    updateDeveloperProgress(20, 'Preparing test environment', 0);
+    await delay(500);
+    updateDeveloperProgress(40, 'Saving test file and installing dependencies', 1);
+
+    let executionCommand = '';
+    switch (selectedLanguage) {
+        case 'python':
+            executionCommand = `pytest ${testFileName}`;
+            break;
+        case 'java':
+            executionCommand = `javac ${testFileName} && java Main`;
+            break;
+        case 'c':
+            executionCommand = `gcc ${testFileName} -o test_exec && ./test_exec`;
+            break;
+        case 'c++':
+        case 'cpp':
+            executionCommand = `g++ ${testFileName} -o test_exec && ./test_exec`;
+            break;
+    }
+
+    try {
+        const response = await fetch('/run_unit_tests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test_content: testContent,
+                test_filename: testFileName,
+                execution_command: executionCommand
+            })
+        });
+
+        updateDeveloperProgress(60, 'Executing unit tests', 2);
+        await delay(1000);
+
+        const result = await response.json();
+        updateDeveloperProgress(80, 'Collecting test results', 3);
+        await delay(500);
+        updateDeveloperProgress(100, 'Unit test execution completed', 4);
+
+        const resultOutput = `
+# 🧪 UNIT TEST EXECUTION RESULTS
+# Executed on: ${new Date().toLocaleString()}
+# Test File: ${testFileName}
+# Execution Status: ${result.execution_status || 'COMPLETED'}
+# OUTPUT:
+${result.stdout || 'No output captured'}
+# STD ERROR OUTPUT:
+${result.stderr || 'No errors'}
+# EXECUTION SUMMARY:
+Return Code: ${result.return_code || 'N/A'}
+Tests Passed: ${result.tests_passed || 'Check output above'}
+Tests Failed: ${result.tests_failed || 'Check output above'}
+Total Runtime: ${result.execution_time || 'N/A'}
+${result.return_code === 0 ? '✅ ALL TESTS PASSED!' : '❌ SOME TESTS FAILED'}
+# TEST CODE:
+${testContent}`;
+
+        testTextarea.value = resultOutput;
+        updateTabCharCount('unittest');
+
+        if (result.return_code === 0) {
+            showToast('✅ Unit tests executed successfully! All tests passed.', 'success');
+        } else {
+            showToast('⚠️ Unit tests completed with failures. Check results above.', 'warning');
+        }
+    } catch (error) {
+        console.error('❌ Unit test execution error:', error);
+        showToast('Unit test execution failed: ' + error.message, 'error');
+    } finally {
+        hideDeveloperProgress();
+    }
 }
+
 
 // ================================================================================================
 // KEYBOARD SHORTCUTS AND ACCESSIBILITY

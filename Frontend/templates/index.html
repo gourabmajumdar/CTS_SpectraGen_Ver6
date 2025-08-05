@@ -1133,8 +1133,8 @@
                     <p>Track your development and testing workflow performance</p>
                 </div>
 
-                <!-- TOP ROW: Counters, Bar Chart, Summary -->
-                <div class="analytics-main-grid">
+                <!-- TOP ROW: Workflow + Execution + Summary in a single row -->
+                <div class="analytics-main-grid" style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <!-- Analytics Counters -->
                     <div class="analytics-counters">
                         <div class="counters-title">Workflow Counters</div>
@@ -1177,16 +1177,41 @@
                         </div>
                     </div>
 
-		
+                    <!-- Analytics Execution Counters Section -->
+                    <div class="workflow-container">
+                        <div class="counters-title">Execution Counters</div>
+                        <div class="execution-counters-grid">
+                        <div class="execution-column">
+                            <div class="execution-stat-card pass">
+                            <span class="stat-icon">✅</span>
+                            <div class="stat-value" id="DevScriptsPassed">0</div>
+                            <div class="stat-label">Dev Scripts Passed</div>
+                            </div>
+                            <div class="execution-stat-card pass">
+                            <span class="stat-icon">✅</span>
+                            <div class="stat-value" id="QAScriptsPassed">0</div>
+                            <div class="stat-label">QA Scripts Passed</div>
+                            </div>
+                        </div>
+                        <div class="execution-column">
+                            <div class="execution-stat-card fail">
+                            <span class="stat-icon">❌</span>
+                            <div class="stat-value" id="DevScriptsFailed">0</div>
+                            <div class="stat-label">Dev Scripts Failed</div>
+                            </div>
+                            <div class="execution-stat-card fail">
+                            <span class="stat-icon">❌</span>
+                            <div class="stat-value" id="QAScriptsFailed">0</div>
+                            <div class="stat-label">QA Scripts Failed</div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>		
 
 
 
 
-                    <!-- Bar Chart -->
-                    <div class="analytics-bar-chart">
-                        <div class="chart-title">Code Generation Overview</div>
-                        <canvas id="barChart" width="400" height="300"></canvas>
-                    </div>
+
 
                     <!-- Summary Statistics -->
                     <div class="analytics-summary-compact">
@@ -1212,32 +1237,23 @@
                     </div>
                 </div>
 
-                <!-- Analytics Execution Counters Section -->
-                <div class="execution-counters">
-                    <h3>Execution Counter</h3>
-                    <div class="execution-group">
-                        <div class="stat-label">Dev Scripts Passed</div>
-                        <div class="stat-value" id="DevScriptsPassed">0</div>
 
-                        <div class="stat-label">Dev Scripts Failed</div>
-                        <div class="stat-value" id="DevScriptsFailed">0</div>
-                  
-                        <div class="stat-label">QA Scripts Passed</div>
-                        <div class="stat-value" id="QAScriptsPassed">0</div>
-                  
-                        <div class="stat-label">QA Scripts Failed</div>
-                        <div class="stat-value" id="QAScriptsFailed">0</div>
-                    </div>
-                  </div>
+                
 
 
 
-                <!-- BOTTOM ROW: Pie Chart and Line Chart -->
-                <div class="analytics-bottom-grid">
+                <!-- BOTTOM ROW: Bar Chart + Pie Chart + Line Chart -->
+                <div class="analytics-bottom-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">
                     <!-- Pie Chart -->
                     <div class="analytics-pie-chart">
                         <div class="chart-title">Review Activity Distribution</div>
                         <canvas id="pieChart" width="400" height="300"></canvas>
+                    </div>
+
+                    <!-- Bar Chart -->
+                    <div class="analytics-bar-chart">
+                        <div class="chart-title">Code Generation Overview</div>
+                        <canvas id="barChart" width="400" height="300"></canvas>
                     </div>
 
                     <!-- Line Chart -->
@@ -1275,3 +1291,4 @@
     </script>
 </body>
 </html>
+

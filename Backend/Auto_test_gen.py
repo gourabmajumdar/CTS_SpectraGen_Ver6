@@ -237,15 +237,19 @@ class EnhancedCodeGenerator:
 
     def infer_language_from_prompt(self, prompt: str) -> str: #Divya_NEW
         prompt_lower = prompt.lower()
-        print(f"******************************* {prompt_lower}")
+        print(f"***************AUTOTEST-1**************** {prompt_lower}")
         if 'java' in prompt_lower:
             return 'java'
         elif 'c++' in prompt_lower or 'cpp' in prompt_lower:
             return 'cpp'
-        elif 'c program' in prompt_lower or 'c' in prompt_lower:
+        elif 'c program' in prompt_lower or 'c developer' in prompt_lower:
+            print(f"***************AUTOTEST-4**************** ")
             return 'c'
-        else:
+        elif 'python' in prompt_lower:
+            print(f"***************AUTOTEST-3**************** ")
             return 'python'
+        else:
+            return 'Language selection error'
 
     def generate_application_code(self, prompt_data, codebase_context=None, generation_options=None):
         """Generate application code with smart reuse capability - PRESERVES EXISTING INTERFACE"""
@@ -264,7 +268,7 @@ class EnhancedCodeGenerator:
                 language = None
             if not language:
                 language = self.infer_language_from_prompt(prompt)
-            print(f"******************************* {language}")
+            print(f"*************AUTOTEST-2****************** {language}")
             '''    
             else:
                 prompt = str(prompt_data)

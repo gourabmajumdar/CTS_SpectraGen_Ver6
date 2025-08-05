@@ -6674,3 +6674,62 @@ textarea:focus-visible {
     border-top: 1px solid #e5e7eb;
     text-align: right;
 }
+
+/* PD add */
+.workflow-container {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.03);
+    margin: 0 auto;
+    width: 500px; /* Match width of Workflow Counters box */
+    vertical-align: top;
+  }
+  
+  
+  .execution-stat-card {
+    background-color: #f8f9fa; /* Light gray */
+    padding: 10px;
+    width: 140px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+    font-size: 0.9rem;
+  }
+  
+  .execution-stat-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .execution-counters-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px; /*was 60px, making it tighter*/
+    margin-top: 20px;
+  }
+  
+  .execution-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .execution-stat-card.pass {
+    border-left: 5px solid #28a745;
+  }
+  
+  .execution-stat-card.fail {
+    border-left: 5px solid #dc3545;
+  }
+
+.analytics-counters,
+.workflow-container,
+.analytics-summary-compact,
+.analytics-bar-chart,
+.analytics-pie-chart,
+.analytics-line-chart {
+  flex: 1 1 300px;
+  max-width: 33%;
+  min-width: 280px;
+}
